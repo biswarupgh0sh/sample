@@ -21,7 +21,7 @@ function App() {
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
-        <h1>This proves that the pipeline is working</h1>
+        <h1 style={{ fontSize: "8px"}}>This proves that the pipeline is working, once i do any change in the app it will, replicate the change.</h1>
         <p>
           Edit <code>src/App.jsx</code> and save to test HMR
         </p>
