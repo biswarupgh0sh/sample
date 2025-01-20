@@ -1,0 +1,53 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      # Step 3: Cache Node.js modules
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Step 4: Install dependencies
+      - name: Install frontend dependencies
+        run: npm install
+
+      # Step 5: Build the frontend project
+      - name: Build frontend
+        run: npm run build
+
+      # Step 6: Trigger Render deployment
+      - name: Trigger Render deploy for frontend
+        env:
+          RENDER_FRONTEND_TOKEN: ${{ secrets.RENDER_FRONTEND_TOKEN }}
+        run: |
+          SERVICE_ID=${{ secrets.FRONTEND_SERVICE_ID }}
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            https://api.render.com/v1/services/$SERVICE_ID/deploys \
+            -H "Authorization: Bearer $RENDER_FRONTEND_TOKEN")
+          if [ "$RESPONSE" -ne 200 ]; then
+            echo "Failed to trigger Render deploy. HTTP status: $RESPONSE"
+            exit 1
+          else
+            echo "Render deployment triggered successfully."
+          fi
