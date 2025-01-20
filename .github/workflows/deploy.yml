@@ -40,14 +40,15 @@ jobs:
       - name: Trigger Render deploy for frontend
         env:
           RENDER_FRONTEND_TOKEN: ${{ secrets.RENDER_FRONTEND_TOKEN }}
+          FRONTEND_SERVICE_ID: ${{ secrets.FRONTEND_SERVICE_ID }}
         run: |
-          SERVICE_ID=${{ secrets.FRONTEND_SERVICE_ID }}
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            https://api.render.com/v1/services/$SERVICE_ID/deploys \
+            https://api.render.com/v1/services/$FRONTEND_SERVICE_ID/deploys \
             -H "Authorization: Bearer $RENDER_FRONTEND_TOKEN")
-          if [ "$RESPONSE" -ne 200 ]; then
+          if [ "$RESPONSE" -ge 200 ] && [ "$RESPONSE" -lt 300 ]; then
+            echo "Render deployment triggered successfully. HTTP status: $RESPONSE"
+          else
             echo "Failed to trigger Render deploy. HTTP status: $RESPONSE"
             exit 1
-          else
-            echo "Render deployment triggered successfully."
           fi
+    
